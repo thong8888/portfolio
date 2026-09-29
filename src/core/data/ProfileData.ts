@@ -55,10 +55,7 @@ export class ProfileData {
   ];
 
   get skills(): readonly Skill[] {
-    return [
-      { name: "Bash / Shell", category: "automation", note: "Study-DevOps repo",      status: "staging" },
-      { name: "Terraform",    category: "iac",        note: "learn-DevOp repo (HCL)", status: "staging" },
-    ]
+    return this._skills;
   }
 
   // ===== Chứng chỉ (docker images) =====

@@ -12,7 +12,7 @@ export default function Hero() {
     document.getElementById("terminal")?.scrollIntoView({ behavior: "smooth", block: "center" });
   };
 
-  const downloadCV = () => new ResumeBuilder(profile).download();
+  const downloadCV = () => new ResumeBuilder(profile).downloadPDF();
 
   return (
     <header className="hero container">

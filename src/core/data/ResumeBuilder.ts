@@ -1,68 +1,124 @@
+import { escapeHtml } from "@/core/utils/helpers";
 import type { ProfileData } from "./ProfileData";
 
-/** Đóng gói CV dạng text từ ProfileData và cho phép tải về */
+/** Hiển thị tên chứng chỉ đẹp trên CV in ra */
+const CERT_TITLES: Record<string, string> = {
+  "cisco/ccna": "CCNA — Cisco Certified Network Associate",
+  "lpi/lpic-1": "LPIC-1 — Linux Professional Institute Certification",
+  "hackerrank/react": "Frontend Developer (React) Certificate",
+  "britishcouncil/aptis": "Aptis English Certificate — B2",
+};
+
 export class ResumeBuilder {
   constructor(private readonly profile: ProfileData) {}
 
-  build(): string {
-    const p = this.profile;
-    const c = p.contact;
-    const L: string[] = [];
-
-    L.push(p.name.toUpperCase());
-    L.push("IT SUPPORT | ASPIRING DEVOPS ENGINEER");
-    L.push("=".repeat(52));
-    L.push(`Email: ${c.email} | Phone: ${c.phone}`);
-    L.push(`GitHub: ${c.github} | LinkedIn: ${c.linkedin}`);
-    L.push(`Location: ${c.location} | Birth: ${p.birthDate}`);
-    L.push("");
-    L.push("CAREER OBJECTIVE");
-    L.push(
-      "IT professional voi kinh nghiem Help Desk thuc te (SLA first-response < 1 phut),",
-    );
-    L.push(
-      "nen tang networking (CCNA) va Linux (LPIC-1), dang cau thuc hanh Docker va n8n.",
-    );
-    L.push(`Muc tieu: ${p.targetRole}.`);
-    L.push("");
-    L.push("CERTIFICATIONS");
-    p.certifications.forEach((ct) =>
-      L.push(`- ${ct.repo} [${ct.tag}] — ${ct.issuer} — ${ct.issued} — ${ct.status}`),
-    );
-    L.push("");
-    L.push("SKILLS");
-    p.skills.forEach((s) => L.push(`- ${s.name} (${s.category}) — ${s.note} [${s.status}]`));
-    L.push("");
-    L.push("WORK EXPERIENCE");
-    p.experiences.forEach((x) => {
-      L.push(`[${x.date}] ${x.role} · ${x.org}`);
-      L.push(`  ${x.desc}`);
-      L.push(
-        "  " +
-          x.stats
-            .map((s) => s.add ?? s.del ?? s.upt ?? "")
-            .join(" | "),
-      );
-      L.push("");
-    });
-    L.push("PROJECTS");
-    p.projects.forEach((pr) => L.push(`- ${pr.slug}: ${pr.desc} (${pr.stack})`));
-    L.push("");
-    L.push("EDUCATION");
-    L.push(`- ${p.education}`);
-    L.push("");
-    L.push(`— Tao tu portfolio terminal · ${new Date().getFullYear()}`);
-    return L.join("\n");
+  downloadPDF(): void {
+    if (typeof window === "undefined") return;
+    const w = window.open("", "_blank", "width=900,height=1100");
+    if (!w) return;
+    w.document.write(this.buildHTML());
+    w.document.close();
+    w.onafterprint = () => w.close();
+    setTimeout(() => {
+      w.focus();
+      w.print();
+    }, 400);
   }
 
-  download(filename = "NguyenHuyThong_CV.txt"): void {
-    if (typeof document === "undefined") return; // chỉ chạy ở client
-    const blob = new Blob([this.build()], { type: "text/plain;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = filename;
-    a.click();
-    URL.revokeObjectURL(url);
+  private buildHTML(): string {
+    const p = this.profile;
+    const c = p.contact;
+    const e = escapeHtml;
+
+    const certRows = p.certifications
+      .map(
+        (ct) =>
+          `<li><b>${e(CERT_TITLES[ct.repo] ?? ct.repo)}</b> — ${e(ct.issuer)} — ${e(ct.issued)}${ct.status === "valid" ? "" : " (dự kiến)"}</li>`,
+      )
+      .join("");
+
+    const skillRows = p.skills
+      .map(
+        (s) =>
+          `<tr><td><b>${e(s.name)}</b></td><td>${e(s.note)}</td><td>${s.status === "production" ? "Dùng hằng ngày" : "Đang nâng cao"}</td></tr>`,
+      )
+      .join("");
+
+    const expBlocks = p.experiences
+      .filter((x) => x.kind !== "init")
+      .map(
+        (x) => `
+        <div class="job">
+          <div class="job-head">
+            <span><b>${e(x.role)}</b> — ${e(x.org)}</span>
+            <span class="date">${e(x.date)}</span>
+          </div>
+          <p>${e(x.desc)}</p>
+          <ul>${x.stats.map((s) => `<li>${e(s.add ?? s.del ?? s.upt ?? "")}</li>`).join("")}</ul>
+        </div>`,
+      )
+      .join("");
+
+    const projRows = p.projects
+      .map((pr) => `<li><b>${e(pr.slug)}</b>: ${e(pr.desc)} <i>(${e(pr.stack)})</i></li>`)
+      .join("");
+
+    return `<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>CV — ${e(p.name)}</title>
+<style>
+  @page { size: A4; margin: 13mm 15mm; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: Arial, "Segoe UI", sans-serif; color: #1a1a1a; font-size: 12.5px; line-height: 1.55; }
+  header { border-bottom: 2.5px solid #1a1a1a; padding-bottom: 10px; margin-bottom: 12px; }
+  h1 { font-size: 22px; }
+  .role { font-size: 13px; color: #444; margin-top: 2px; }
+  .contact { margin-top: 6px; font-size: 11.5px; color: #333; }
+  h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid #999; padding-bottom: 3px; margin: 13px 0 7px; }
+  p { margin-bottom: 5px; }
+  ul { margin: 3px 0 7px 17px; }
+  li { margin-bottom: 2px; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  th { text-align: left; border-bottom: 1px solid #ccc; padding: 3px 8px 3px 0; font-size: 10.5px; text-transform: uppercase; color: #555; }
+  td { padding: 3px 8px 3px 0; border-bottom: 1px solid #eee; vertical-align: top; }
+  .job { margin-bottom: 9px; }
+  .job-head { display: flex; justify-content: space-between; gap: 10px; }
+  .date { font-size: 11.5px; color: #555; white-space: nowrap; }
+</style>
+</head>
+<body>
+  <header>
+    <h1>${e(p.name)}</h1>
+    <div class="role">${e(p.role)}</div>
+    <div class="contact">
+      ${e(c.email)} · ${e(c.phone)} · ${e(c.location)}<br>
+      GitHub: ${e(c.github)} · LinkedIn: ${e(c.linkedin)}
+    </div>
+  </header>
+
+  <h2>Career Objective</h2>
+  <p>IT professional với kinh nghiệm Help Desk thực tế (first-response dưới 1 phút theo SLA), nền tảng networking (CCNA) và Linux (LPIC-1), đang củng cố kỹ năng containerization (Docker) và automation (n8n). Mục tiêu: ${e(p.targetRole)}.</p>
+
+  <h2>Certifications</h2>
+  <ul>${certRows}</ul>
+
+  <h2>Skills</h2>
+  <table>
+    <tr><th style="width:32%">Skill</th><th>Chi tiết</th><th style="width:22%">Mức độ</th></tr>
+    ${skillRows}
+  </table>
+
+  <h2>Work Experience</h2>
+  ${expBlocks}
+
+  <h2>Projects</h2>
+  <ul>${projRows}</ul>
+
+  <h2>Education</h2>
+  <p>${e(p.education)}</p>
+</body>
+</html>`;
   }
 }
