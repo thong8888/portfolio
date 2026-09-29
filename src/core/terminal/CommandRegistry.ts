@@ -18,12 +18,11 @@ export class CommandRegistry {
   }
 
   /** Danh sách lệnh chính (thứ tự đăng ký) */
-  get all(): TerminalCommand[] {
-    return [...this.commands.values()];
-  }
+get all(): TerminalCommand[] {
+  return Array.from(this.commands.values());
+}
 
-  /** Tên + alias — dùng cho tab-complete */
-  get names(): string[] {
-    return [...this.commands.keys(), ...this.aliasMap.keys()];
-  }
+get names(): string[] {
+  return Array.from(this.commands.keys()).concat(Array.from(this.aliasMap.keys()));
+}
 }

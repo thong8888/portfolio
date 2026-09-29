@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { JetBrains_Mono, Be_Vietnam_Pro } from "next/font/google";
-// @ts-expect-error CSS imports are handled by Next.js at build time.
 import "./globals.css";
 
 const mono = JetBrains_Mono({

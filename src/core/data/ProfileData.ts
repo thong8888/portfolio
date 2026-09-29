@@ -170,14 +170,13 @@ export class ProfileData {
     },
   ];
 
-get projects() {
+get projects(): Project[] {
   return [
-    { slug: "learn-DevOp",    desc: "Hành trình học DevOps: Terraform (HCL), hạ tầng as code.",  stack: "HCL · Terraform",     status: "running" },
-    { slug: "Study-DevOps",   desc: "Lab & script DevOps — Shell, Linux, tự động hóa.",            stack: "Shell · Linux",       status: "running" },
-    { slug: "web-docker",     desc: "Website đóng gói & deploy bằng Docker.",                      stack: "JavaScript · Docker", status: "running" },
-    { slug: "card-flip-game", desc: "Game lật bài xây bằng Next.js + TypeScript.",                 stack: "Next.js · TypeScript",status: "running" },
-    { slug: "snake-game",     desc: "Game rắn cổ điển viết lại bằng TypeScript.",                  stack: "TypeScript",          status: "running" },
-    { slug: "card-game",      desc: "Game bài viết bằng TypeScript.",                              stack: "TypeScript",          status: "running" },
+    { slug: "learn-DevOp",    desc: "Hành trình học DevOps: Terraform (HCL), hạ tầng as code.",  stack: "HCL · Terraform",      status: "running" },
+    { slug: "Study-DevOps",   desc: "Lab & script DevOps — Shell, Linux, tự động hóa.",            stack: "Shell · Linux",        status: "running" },
+    { slug: "web-docker",     desc: "Website đóng gói & deploy bằng Docker.",                      stack: "JavaScript · Docker",  status: "running" },
+    { slug: "card-flip-game", desc: "Game lật bài xây bằng Next.js + TypeScript.",                 stack: "Next.js · TypeScript", status: "running" },
+    { slug: "snake-game",     desc: "Game rắn cổ điển viết lại bằng TypeScript.",                  stack: "TypeScript",           status: "running" },
   ];
 }
 }
