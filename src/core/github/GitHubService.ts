@@ -15,18 +15,31 @@ interface GitHubRepo {
 
 export interface GitHubConfig {
   username: string;
+  /** CHỈ hiển thị những repo này, đúng thứ tự liệt kê. Để [] = tự lấy theo priority + last push */
+  onlyRepos: string[];
   maxRepos: number;
   includeForks: boolean;
-  /** Repo muốn ghim lên đầu — tên trùng tên repo trên GitHub */
   priorityRepos: string[];
   cacheTtlMs: number;
 }
 
 const DEFAULT_CONFIG: GitHubConfig = {
   username: "thong8888",
+  // ===== SỬA DANH SÁCH REPO MUỐN HIỂN THỊ TẠI ĐÂY =====
+  // muốn ẩn repo nào: xóa dòng đó đi. muốn thêm: thêm tên vào.
+  // thứ tự liệt kê = thứ tự hiển thị trên trang
+  onlyRepos: [
+    "portfolio",
+    "web-docker",
+    "card-flip-game",
+    "snake-game",
+    "learn-DevOp",
+    "Study-DevOps",
+  ],
+  // =====================================================
   maxRepos: 6,
   includeForks: false,
-  priorityRepos: ["learn-DevOp", "Study-DevOps", "web-docker", "card-flip-game"],
+  priorityRepos: [],
   cacheTtlMs: 10 * 60 * 1000,
 };
 
@@ -74,11 +87,18 @@ export class GitHubService {
     if (this.inflight) return this.inflight;
 
     this.inflight = (async () => {
+      const wanted = this.config.onlyRepos.map((n) => n.toLowerCase());
       const repos = await this.fetchRepos();
       const projects = repos
         .filter((r) => this.config.includeForks || !r.fork)
         .map((r) => this.toProject(r))
+        .filter((p) => wanted.length === 0 || wanted.includes(p.slug.toLowerCase()))
         .sort((a, b) => {
+          // có whitelist → sắp đúng thứ tự liệt kê
+          if (wanted.length) {
+            return wanted.indexOf(a.slug.toLowerCase()) - wanted.indexOf(b.slug.toLowerCase());
+          }
+          // không có → theo priority, rồi tự nhiên theo last push
           const ia = this.config.priorityRepos.indexOf(a.slug);
           const ib = this.config.priorityRepos.indexOf(b.slug);
           return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
